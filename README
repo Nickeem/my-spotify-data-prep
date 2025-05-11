@@ -1,1 +1,15 @@
 Repository to compile my Spotify Statistics
+
+## Requirements
+
+### config.ini
+
+File must exist within path of script.
+
+### EnvironmentVariables
+The following environment variables should be setup.
+- SPOTIFY_CLIENT_ID
+- SPOTIFY_CLIENT_SECRET
+- SPOTIFY_CLIENT_CODE
+- SPOTIFY_REDIRECT_URI
+- SPOTIFY_STREAMING_HISTORY_PATH
