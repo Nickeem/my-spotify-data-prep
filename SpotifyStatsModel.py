@@ -2,21 +2,31 @@ from pocketbase import PocketBase
 import json
 
 class SpotifyStatsModel:
-    def __init__(self, address ):
+    def __init__(self, address, collection_name, admin_email, admin_password):
         
-        self.collection_name = "spotify_stats"
+        self.collection_name = collection_name
         self.address = address
         self.pb = PocketBase(address)
-
+ 
         # authenticate with the PocketBase server
         admin_data = self.pb.admins.auth_with_password(
-            email="daily@drive.app",
-            password="HPaqcFihMZoyNtX", )
+            email=admin_email,
+            password=admin_password, )
         
         if not admin_data.is_valid:
             raise Exception("Failed to authenticate with PocketBase server. Check your credentials.")
         
         self.admin_data = admin_data
+
+        # Temporary Poketbase field keys. 
+        # IMPLEMENTATION NOTE: These should be replaced and a more dynamic solution should be in place in the future.
+        self.total_ms_listened_record_id = 'k79p34vx2t81ppm'  # total_ms_listened record id
+        self.total_ms_listened_ly_record_id = 'g1u3v64la2ufpyx'
+        self.average_ms_listened_record_id = 'cvcl26dhoq3698a'
+        self.top_5_songs_recent_record_id = 'ncdzc3y1paeayj4'
+        self.top_5_artists_recent_record_id = '3726130j114pzzm'
+        self.mom_ms_listened_record_id = '723y18jg6z2srvx'
+        self.listening_clock_ly_record_id = '7pc06xg3ix8c847'
 
 
     def update_stats(self, record_id, label, value):
@@ -51,7 +61,7 @@ class SpotifyStatsModel:
         None
         ''' 
         # Update the total minutes listened to in the PocketBase database
-        total_ms_listened_record_id = 'k79p34vx2t81ppm' # total_ms_listened record id
+        total_ms_listened_record_id = self.total_ms_listened_record_id # total_ms_listened record id
         label = 'total_ms_listened'
         self.update_stats(total_ms_listened_record_id, label, total_ms_listened)
 
@@ -67,7 +77,7 @@ class SpotifyStatsModel:
         None
         ''' 
         # Update the total minutes listened to in the PocketBase database
-        total_ms_listened_ly_record_id = 'g1u3v64la2ufpyx'
+        total_ms_listened_ly_record_id = self.total_ms_listened_ly_record_id
         label = 'total_ms_listened_last_year'
         self.update_stats(total_ms_listened_ly_record_id, label, total_ms_listened_last_year)
 
@@ -82,7 +92,7 @@ class SpotifyStatsModel:
         None
         ''' 
         # Update the total minutes listened to in the PocketBase database
-        average_ms_listened_record_id = 'cvcl26dhoq3698a'
+        average_ms_listened_record_id = self.average_ms_listened_record_id
         label = 'average_ms_listened'
         self.update_stats(average_ms_listened_record_id, label, average_ms_listened)
 
@@ -97,7 +107,7 @@ class SpotifyStatsModel:
         None
         ''' 
         # Update the total minutes listened to in the PocketBase database
-        top_5_songs_recent_record_id = 'ncdzc3y1paeayj4'
+        top_5_songs_recent_record_id = self.top_5_songs_recent_record_id
         label = 'top_5_songs_recent'
         self.update_stats(top_5_songs_recent_record_id, label, top_5_songs_recent)
 
@@ -112,7 +122,7 @@ class SpotifyStatsModel:
         None
         ''' 
         # Update the total minutes listened to in the PocketBase database
-        top_5_artists_recent_record_id = '3726130j114pzzm'
+        top_5_artists_recent_record_id = self.top_5_artists_recent_record_id
         label = 'top_5_artists_recent'
         self.update_stats(top_5_artists_recent_record_id, label, top_5_artists_recent)
 
@@ -127,7 +137,7 @@ class SpotifyStatsModel:
         None
         ''' 
         # Update the total minutes listened to in the PocketBase database
-        mom_ms_listened_record_id = '723y18jg6z2srvx'
+        mom_ms_listened_record_id = self.mom_ms_listened_record_id
         label = 'mom_ly_ms_listened'
         self.update_stats(mom_ms_listened_record_id, label, mom_ms_listened)
 
@@ -142,7 +152,7 @@ class SpotifyStatsModel:
         None
         ''' 
         # Update the total minutes listened to in the PocketBase database
-        listening_clock_ly_record_id = '7pc06xg3ix8c847'
+        listening_clock_ly_record_id = self.listening_clock_ly_record_id
         label = 'listening_clock_ly'
         self.update_stats(listening_clock_ly_record_id, label, listening_clock_ly)
 

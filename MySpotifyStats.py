@@ -6,6 +6,7 @@ import base64
 from datetime import datetime, timedelta, timezone
 import configparser
 from typing import Union
+from Config import Config
 
 class MySpotifyStats:
     client_id = None # Spotify API client ID
@@ -16,17 +17,19 @@ class MySpotifyStats:
 
 
     def __init__(self):
+        self.CONFIG_FILE = 'config.ini' # Path to the config file. Config file should be in the same directory as this script.
+        self.config = Config(self.CONFIG_FILE)
         self.setup()
         pass
 
     def setup(self):
         # This function retrieves the Spotify API credentials from environment variables.
         # Make sure to set these environment variables in your system or IDE.
-        self.client_id = os.getenv('SPOTIFY_CLIENT_ID')
-        self.client_secret = os.getenv('SPOTIFY_CLIENT_SECRET')
-        self.client_code = os.getenv('SPOTIFY_CLIENT_CODE')
-        self.streaming_history_path = os.getenv('SPOTIFY_STREAMING_HISTORY_PATH')
-        self.redirect_uri = os.getenv('SPOTIFY_REDIRECT_URI')
+        self.client_id = self.config.get_config_value('Spotify_API_Secrets', 'SPOTIFY_CLIENT_ID') # os.getenv('SPOTIFY_CLIENT_ID')
+        self.client_secret = self.config.get_config_value('Spotify_API_Secrets', 'SPOTIFY_CLIENT_SECRET') # os.getenv('SPOTIFY_CLIENT_SECRET')
+        self.client_code = self.config.get_config_value('Spotify_API_Secrets', 'SPOTIFY_CLIENT_CODE') # os.getenv('SPOTIFY_CLIENT_CODE')
+        self.redirect_uri = self.config.get_config_value('Spotify_API_Secrets', 'SPOTIFY_REDIRECT_URI') # os.getenv('SPOTIFY_REDIRECT_URI')
+        self.streaming_history_path = self.config.get_config_value('Spotify_Data', 'SPOTIFY_STREAMING_HISTORY_PATH') # os.getenv('SPOTIFY_STREAMING_HISTORY_PATH')
 
         if not self.client_id or not self.client_secret:
             raise Exception("Please set the SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET environment variables.")
@@ -195,35 +198,16 @@ class MySpotifyStats:
     def btoa(self,string):
         return base64.b64encode(string.encode('utf-8')).decode('utf-8')
     
-    def get_config_value(self, section, key):
-        # this function gets the value of a key in a section in config.ini file
-        config = configparser.ConfigParser()
-        config.read('config.ini')
-        if config.has_option(section, key):
-            return config.get(section, key)
-        else:
-            raise Exception(f"Key '{key}' not found in section '{section}' in config.ini file.")
-        
-
-    def set_config_value(self, section, key, value):
-        # this function sets the value of a key in a section in config.ini file
-        config = configparser.ConfigParser()
-        config.read('config.ini')
-        if not config.has_section(section):
-            config.add_section(section)
-        config.set(section, key, value)
-        with open('config.ini', 'w') as configfile:
-            config.write(configfile)
 
 
     def get_access_token(self):
-        expiration = self.get_config_value('Spotify_API', 'SPOTIFY_ACCESS_TOKEN_EXPIRATION') 
+        expiration = self.config.get_config_value('Spotify_API', 'SPOTIFY_ACCESS_TOKEN_EXPIRATION') 
         # check if the expiration time is set and if it is in the past
         if expiration:
             expiration = datetime.fromisoformat(expiration).astimezone(timezone.utc)
             if expiration > datetime.now(timezone.utc):
                 # If the token is still valid, return it
-                return self.get_config_value('Spotify_API', 'SPOTIFY_ACCESS_TOKEN')
+                return self.config.get_config_value('Spotify_API', 'SPOTIFY_ACCESS_TOKEN')
             else:
                 return self.refresh_spotify_api_token()
 
@@ -236,9 +220,9 @@ class MySpotifyStats:
         print(f"Refresh Token: {refresh_token}")
         print(f"Expires In: {expires_in} seconds")
         # This function sets the access token, refresh token, and expiration time in environment variables.
-        self.set_config_value('Spotify_API', 'SPOTIFY_ACCESS_TOKEN', access_token)
-        self.set_config_value('Spotify_API', 'SPOTIFY_REFRESH_TOKEN', refresh_token)
-        self.set_config_value('Spotify_API', 'SPOTIFY_ACCESS_TOKEN_EXPIRATION', (datetime.now(timezone.utc) + timedelta(seconds=expires_in)).isoformat())  
+        self.config.set_config_value('Spotify_API', 'SPOTIFY_ACCESS_TOKEN', access_token)
+        self.config.set_config_value('Spotify_API', 'SPOTIFY_REFRESH_TOKEN', refresh_token)
+        self.config.set_config_value('Spotify_API', 'SPOTIFY_ACCESS_TOKEN_EXPIRATION', (datetime.now(timezone.utc) + timedelta(seconds=expires_in)).isoformat())  
 
 
     def generate_spotify_api_token(self):
@@ -271,7 +255,7 @@ class MySpotifyStats:
 
 
     def refresh_spotify_api_token(self):
-        refresh_token = self.get_config_value('Spotify_API', 'SPOTIFY_REFRESH_TOKEN') 
+        refresh_token = self.config.get_config_value('Spotify_API', 'SPOTIFY_REFRESH_TOKEN') 
         if not refresh_token:
             raise Exception("Refresh token is not set. Please generate a new access token.")
         # This function refreshes the Spotify API token using the refresh token.
@@ -295,7 +279,7 @@ class MySpotifyStats:
             # There are instances depending on the grant type where the refresh token is not returned in the response and the access token is returned instead.
             # In this case, the script can use the previously stored access token
             if refresh_token is None and access_token is not None:
-                update_expiration = self.set_config_value('Spotify_API', 'SPOTIFY_ACCESS_TOKEN_EXPIRATION', (datetime.now(timezone.utc) + timedelta(seconds=expires_in)).isoformat())
+                update_expiration = self.config.set_config_value('Spotify_API', 'SPOTIFY_ACCESS_TOKEN_EXPIRATION', (datetime.now(timezone.utc) + timedelta(seconds=expires_in)).isoformat())
                 return access_token
             else:
                 # Set the access token, refresh token, and expiration time in environment variables

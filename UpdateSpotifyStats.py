@@ -1,6 +1,7 @@
 from MySpotifyStats import MySpotifyStats
 from SpotifyStatsModel import SpotifyStatsModel
 import datetime as dt
+from Config import Config
 
 def simplify_top_songs(top_songs):
     top_songs_simplified = []
@@ -67,10 +68,16 @@ def simplify_top_artists(top_artists):
         })
     return top_artists_simplified
 
+# set config variables
+config = Config('config.ini')
 
+pocketbase_url = config.get_config_value('PocketBase', 'POCKETBASE_URL')
+admin_email = config.get_config_value('PocketBase', 'POCKETBASE_ADMIN_EMAIL')
+admin_password = config.get_config_value('PocketBase', 'POCKETBASE_ADMIN_PASSWORD')
+collection_name = config.get_config_value('PocketBase', 'POCKETBASE_COLLECTION_NAME')
 
 stats = MySpotifyStats()
-stats_model = SpotifyStatsModel("http://192.168.1.130:8090")
+stats_model = SpotifyStatsModel(pocketbase_url, collection_name, admin_email, admin_password)
 
 
 # get dates for beginning of last year and end of last year
