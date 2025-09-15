@@ -7,22 +7,15 @@ Repository to compile my Spotify Statistics
 File must exist within path of script.
 
 ### config.ini Structure
-[Spotify_API]
-spotify_refresh_token = <>
-spotify_access_token = <>
-spotify_access_token_expiration = <>
-
-[Spotify_API_Secrets]
-spotify_client_id = <>
-spotify_client_code = <>
-spotify_client_secret = <>
-spotify_redirect_uri = <>
-
 [Spotify_Data]
 spotify_streaming_history_path = <>
 
 [PocketBase]
 pocketbase_url = <>
 pocketbase_collection_name = <>
-pocketbase_admin_email = <>
-pocketbase_admin_password = <>
+
+
+[Vault]
+vault_url = <>
+vault_token = <>
+vault_secret_path = <>
