@@ -7,6 +7,8 @@ from datetime import datetime, timedelta, timezone
 import configparser
 from typing import Union
 from Config import Config
+from VaultConfig import VaultConfig
+from pathlib import Path
 
 class MySpotifyStats:
     client_id = None # Spotify API client ID
@@ -16,20 +18,20 @@ class MySpotifyStats:
     redirect_uri = None # Spotify API redirect URI
 
 
-    def __init__(self):
-        self.CONFIG_FILE = 'config.ini' # Path to the config file. Config file should be in the same directory as this script.
+    def __init__(self, config_file, vault_url, vault_token):
+        self.vault = VaultConfig(vault_url, vault_token)
+        self.CONFIG_FILE = config_file # Path to the config file. Config file should be in the same directory as this script.
         self.config = Config(self.CONFIG_FILE)
         self.setup()
-        pass
 
     def setup(self):
         # This function retrieves the Spotify API credentials from environment variables.
         # Make sure to set these environment variables in your system or IDE.
-        self.client_id = self.config.get_config_value('Spotify_API_Secrets', 'SPOTIFY_CLIENT_ID') # os.getenv('SPOTIFY_CLIENT_ID')
-        self.client_secret = self.config.get_config_value('Spotify_API_Secrets', 'SPOTIFY_CLIENT_SECRET') # os.getenv('SPOTIFY_CLIENT_SECRET')
-        self.client_code = self.config.get_config_value('Spotify_API_Secrets', 'SPOTIFY_CLIENT_CODE') # os.getenv('SPOTIFY_CLIENT_CODE')
-        self.redirect_uri = self.config.get_config_value('Spotify_API_Secrets', 'SPOTIFY_REDIRECT_URI') # os.getenv('SPOTIFY_REDIRECT_URI')
-        self.streaming_history_path = self.config.get_config_value('Spotify_Data', 'SPOTIFY_STREAMING_HISTORY_PATH') # os.getenv('SPOTIFY_STREAMING_HISTORY_PATH')
+        self.client_id = self.vault.get_secret('Spotify_API', 'spotify_client_id') 
+        self.client_secret = self.vault.get_secret('Spotify_API', 'spotify_client_secret') 
+        self.client_code = self.vault.get_secret('Spotify_API', 'spotify_client_code') 
+        self.redirect_uri = self.vault.get_secret('Spotify_API', 'spotify_redirect_uri') 
+        self.streaming_history_path = self.config.get_config_value('Spotify_Data', 'SPOTIFY_STREAMING_HISTORY_PATH') 
 
         if not self.client_id or not self.client_secret:
             raise Exception("Please set the SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET environment variables.")
@@ -201,13 +203,13 @@ class MySpotifyStats:
 
 
     def get_access_token(self):
-        expiration = self.config.get_config_value('Spotify_API', 'SPOTIFY_ACCESS_TOKEN_EXPIRATION') 
+        expiration = self.vault.get_secret('Spotify_API', 'spotify_access_token_expiration') 
         # check if the expiration time is set and if it is in the past
         if expiration:
             expiration = datetime.fromisoformat(expiration).astimezone(timezone.utc)
             if expiration > datetime.now(timezone.utc):
                 # If the token is still valid, return it
-                return self.config.get_config_value('Spotify_API', 'SPOTIFY_ACCESS_TOKEN')
+                return self.vault.get_secret('Spotify_API', 'spotify_access_token')
             else:
                 return self.refresh_spotify_api_token()
 
@@ -220,9 +222,9 @@ class MySpotifyStats:
         print(f"Refresh Token: {refresh_token}")
         print(f"Expires In: {expires_in} seconds")
         # This function sets the access token, refresh token, and expiration time in environment variables.
-        self.config.set_config_value('Spotify_API', 'SPOTIFY_ACCESS_TOKEN', access_token)
-        self.config.set_config_value('Spotify_API', 'SPOTIFY_REFRESH_TOKEN', refresh_token)
-        self.config.set_config_value('Spotify_API', 'SPOTIFY_ACCESS_TOKEN_EXPIRATION', (datetime.now(timezone.utc) + timedelta(seconds=expires_in)).isoformat())  
+        self.vault.update_secret('Spotify_API', 'spotify_access_token', access_token)
+        self.vault.update_secret('Spotify_API', 'spotify_refresh_token', refresh_token)
+        self.vault.update_secret('Spotify_API', 'spotify_access_token_expiration', (datetime.now(timezone.utc) + timedelta(seconds=expires_in)).isoformat())  
 
 
     def generate_spotify_api_token(self):
@@ -255,7 +257,7 @@ class MySpotifyStats:
 
 
     def refresh_spotify_api_token(self):
-        refresh_token = self.config.get_config_value('Spotify_API', 'SPOTIFY_REFRESH_TOKEN') 
+        refresh_token = self.vault.get_secret('Spotify_API', 'spotify_refresh_token') 
         if not refresh_token:
             raise Exception("Refresh token is not set. Please generate a new access token.")
         # This function refreshes the Spotify API token using the refresh token.
@@ -279,7 +281,7 @@ class MySpotifyStats:
             # There are instances depending on the grant type where the refresh token is not returned in the response and the access token is returned instead.
             # In this case, the script can use the previously stored access token
             if refresh_token is None and access_token is not None:
-                update_expiration = self.config.set_config_value('Spotify_API', 'SPOTIFY_ACCESS_TOKEN_EXPIRATION', (datetime.now(timezone.utc) + timedelta(seconds=expires_in)).isoformat())
+                update_expiration = self.vault.update_secret('Spotify_API', 'SPOTIFY_ACCESS_TOKEN_EXPIRATION', (datetime.now(timezone.utc) + timedelta(seconds=expires_in)).isoformat())
                 return access_token
             else:
                 # Set the access token, refresh token, and expiration time in environment variables
