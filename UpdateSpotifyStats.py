@@ -88,19 +88,22 @@ config = Config(config_file_path)
 # set config variables
 vault_url = config.get_config_value('Vault', 'vault_url') 
 vault_token = config.get_config_value('Vault', 'vault_token')
-pocketbase_secret_path = config.get_config_value('Vault', 'vault_secret_path')
+pocketbase_secret_path = config.get_config_value('Vault', 'pocketbase_secret_path')
+vault_spotify_api_path = config.get_config_value('Vault', 'vault_spotify_api_path')
+mount_point = config.get_config_value('Vault', 'mount_point')
+verify_tls = False
 
-vault = VaultConfig(vault_url, vault_token)
+vault = VaultConfig(vault_url, vault_token, verify_tls)
 
 # get pocketbase config from config file
 pocketbase_url = config.get_config_value('PocketBase', 'POCKETBASE_URL')
 collection_name = config.get_config_value('PocketBase', 'POCKETBASE_COLLECTION_NAME')
 
 # get pocketbase admin email and password from vault
-admin_email =  vault.get_secret(pocketbase_secret_path, 'email')
-admin_password = vault.get_secret(pocketbase_secret_path, 'password')
+admin_email =  vault.get_secret(pocketbase_secret_path, 'email', mount_point=mount_point)
+admin_password = vault.get_secret(pocketbase_secret_path, 'password', mount_point=mount_point)
 
-stats = MySpotifyStats(config_file_path, vault_url, vault_token)
+stats = MySpotifyStats(config_file_path, vault_url, vault_token, vault_spotify_api_path, mount_point, verify_tls)
 stats_model = SpotifyStatsModel(pocketbase_url, collection_name, admin_email, admin_password)
 
 
