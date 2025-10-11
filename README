@@ -18,4 +18,6 @@ pocketbase_collection_name = <>
 [Vault]
 vault_url = <>
 vault_token = <>
-vault_secret_path = <>
+pocketbase_secret_path = <>
+vault_spotify_api_path = <>
+mount_point = <>
