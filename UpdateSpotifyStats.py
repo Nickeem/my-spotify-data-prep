@@ -136,7 +136,7 @@ top_5_artists_recent = simplify_top_artists(top_5_artists_recent_raw)
 stats_model.update_top_5_artists_recent(top_5_artists_recent)
 
 # # update month over month listening stats
-month_over_month_listening_stats = stats.get_total_listening_by_month(year)
+month_over_month_listening_stats = stats.get_total_listening_by_month()
 stats_model.update_mom_ly_ms_listened(month_over_month_listening_stats)
 
 # # update listening clock for the year
